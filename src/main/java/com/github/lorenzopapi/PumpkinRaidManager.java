@@ -11,7 +11,6 @@ import net.minecraft.village.PointOfInterestManager;
 import net.minecraft.village.PointOfInterestType;
 import net.minecraft.world.DimensionType;
 import net.minecraft.world.GameRules;
-import net.minecraft.world.raid.Raid;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraft.world.storage.WorldSavedData;
 
@@ -22,7 +21,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class PumpkinRaidManager extends WorldSavedData {
-	private final Map<Integer, Raid> byId = Maps.newHashMap();
+	private final Map<Integer, PumpkinRaid> byId = Maps.newHashMap();
 	private final ServerWorld world;
 	private int nextAvailableId;
 	private int tick;
@@ -46,17 +45,17 @@ public class PumpkinRaidManager extends WorldSavedData {
 
 		for(int i = 0; i < listnbt.size(); ++i) {
 			CompoundNBT compoundnbt = listnbt.getCompound(i);
-			Raid raid = new Raid(this.world, compoundnbt);
+			PumpkinRaid raid = new PumpkinRaid(this.world, compoundnbt);
 			this.byId.put(raid.getId(), raid);
 		}
 	}
 
 	public void tick() {
 		++this.tick;
-		Iterator<Raid> iterator = this.byId.values().iterator();
+		Iterator<PumpkinRaid> iterator = this.byId.values().iterator();
 
 		while(iterator.hasNext()) {
-			Raid raid = iterator.next();
+			PumpkinRaid raid = iterator.next();
 			if (this.world.getGameRules().getBoolean(GameRules.DISABLE_RAIDS)) {
 				raid.stop();
 			}
@@ -75,7 +74,7 @@ public class PumpkinRaidManager extends WorldSavedData {
 	}
 
 	@Nullable
-	public Raid pumpkinTick(ServerPlayerEntity p_215170_1_) {
+	public PumpkinRaid pumpkinTick(ServerPlayerEntity p_215170_1_) {
 		if (p_215170_1_.isSpectator()) {
 			return null;
 		} else if (this.world.getGameRules().getBoolean(GameRules.DISABLE_RAIDS)) {
@@ -104,7 +103,7 @@ public class PumpkinRaidManager extends WorldSavedData {
 					blockpos1 = blockpos;
 				}
 
-				Raid raid = this.findOrCreateRaid(p_215170_1_.getServerWorld(), blockpos1);
+				PumpkinRaid raid = this.findOrCreateRaid(p_215170_1_.getServerWorld(), blockpos1);
 				if (!raid.isStarted()) {
 					if (!this.byId.containsKey(raid.getId())) {
 						this.byId.put(raid.getId(), raid);
@@ -117,9 +116,25 @@ public class PumpkinRaidManager extends WorldSavedData {
 		}
 	}
 
-	private Raid findOrCreateRaid(ServerWorld p_215168_1_, BlockPos p_215168_2_) {
-		Raid raid = p_215168_1_.findRaid(p_215168_2_);
-		return raid != null ? raid : new Raid(nextAvailableId++, p_215168_1_, p_215168_2_);
+	private PumpkinRaid findOrCreateRaid(ServerWorld p_215168_1_, BlockPos p_215168_2_) {
+		PumpkinRaid raid = findRaid(p_215168_2_, 9126);
+		return raid != null ? raid : new PumpkinRaid(nextAvailableId++, p_215168_1_, p_215168_2_);
+	}
+
+	@Nullable
+	public PumpkinRaid findRaid(BlockPos p_215174_1_, int distance) {
+		PumpkinRaid raid = null;
+		double d0 = distance;
+
+		for(PumpkinRaid raid1 : this.byId.values()) {
+			double d1 = raid1.getCenter().distanceSq(p_215174_1_);
+			if (raid1.isActive() && d1 < d0) {
+				raid = raid1;
+				d0 = d1;
+			}
+		}
+
+		return raid;
 	}
 
 	@Override
@@ -128,7 +143,7 @@ public class PumpkinRaidManager extends WorldSavedData {
 		compound.putInt("Tick", this.tick);
 		ListNBT listnbt = new ListNBT();
 
-		for(Raid raid : this.byId.values()) {
+		for(PumpkinRaid raid : this.byId.values()) {
 			CompoundNBT compoundnbt = new CompoundNBT();
 			raid.write(compoundnbt);
 			listnbt.add(compoundnbt);
