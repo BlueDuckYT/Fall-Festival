@@ -1,4 +1,4 @@
-package com.github.lorenzopapi;
+package blueduck.fallfestival;
 
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -9,7 +9,7 @@ import net.minecraft.world.server.ServerWorld;
 
 public class PumpkinWrathEffect extends Effect {
 
-	protected PumpkinWrathEffect() {
+	public PumpkinWrathEffect() {
 		super(EffectType.NEUTRAL, 0xff8c00);
 	}
 

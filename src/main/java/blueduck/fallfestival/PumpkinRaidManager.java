@@ -1,4 +1,4 @@
-package com.github.lorenzopapi;
+package blueduck.fallfestival;
 
 import com.google.common.collect.Maps;
 import net.minecraft.entity.player.ServerPlayerEntity;
